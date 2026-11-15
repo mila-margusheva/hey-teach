@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Редактор заметок</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@700&display=swap&subset=cyrillic">
+<style>
+:root{--bg:#F3F1EB;--tx:#10100F;--line:rgba(16,16,15,.25)}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--tx:#F3F1EB;--line:rgba(243,241,235,.3)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.5 Onest,system-ui,sans-serif;padding:40px 20px 80px}
+main{max-width:720px;margin:0 auto}
+h1{font:700 clamp(28px,7vw,44px)/1.1 Unbounded,sans-serif;margin:0 0 12px}
+h2{font:700 20px/1.2 Unbounded,sans-serif;margin:40px 0 12px}
+p.hint{margin:0 0 24px;opacity:.75}
+label{display:block;font-weight:600;margin:20px 0 6px}
+input,textarea{width:100%;font:inherit;color:inherit;background:transparent;border:1.5px solid var(--line);border-radius:18px;padding:14px 16px}
+textarea{min-height:220px;resize:vertical}
+textarea.code{min-height:160px;font:14px/1.4 ui-monospace,Menlo,monospace}
+.row{display:grid;gap:16px}
+@media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
+button{font:600 17px Onest,sans-serif;border-radius:999px;padding:14px 28px;border:2px solid var(--tx);background:var(--tx);color:var(--bg);cursor:pointer;margin:20px 12px 0 0}
+button.alt{background:transparent;color:var(--tx)}
+#ok{margin-top:12px;font-weight:600;min-height:1.5em}
+</style>
+</head>
+<body>
+<main>
+<h1>Редактор заметок</h1>
+<p class="hint">Напишите заметку, нажмите «Подготовить» и скопируйте результат в файл notes.json на GitHub.</p>
+
+<label for="t">Заголовок</label><input id="t" placeholder="Например: 5 способов запомнить фразовые глаголы">
+<div class="row">
+  <div><label for="d">Дата</label><input id="d" type="date"></div>
+  <div><label for="g">Рубрика (необязательно)</label><input id="g" placeholder="Методика"></div>
+</div>
+<label for="x">Текст заметки</label>
+<textarea id="x" placeholder="Новый абзац отделяйте пустой строкой. Ссылки, начинающиеся с https://, станут кликабельными."></textarea>
+
+<h2>Шаг 2. Текущие заметки</h2>
+<p class="hint">Откройте notes.json на GitHub, скопируйте всё содержимое и вставьте сюда. Если файл пустой, оставьте поле как есть.</p>
+<textarea id="cur" class="code" placeholder="[ ]"></textarea>
+
+<button id="go">Подготовить</button>
+<h2>Готовый файл notes.json</h2>
+<textarea id="out" class="code" readonly placeholder="Здесь появится новый текст для notes.json"></textarea>
+<button id="cp" class="alt">Скопировать</button>
+<div id="ok"></div>
+</main>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+$("d").value=new Date().toISOString().slice(0,10);
+function say(m){$("ok").textContent=m}
+$("go").addEventListener("click",function(){
+ var t=$("t").value.trim(),x=$("x").value.trim(),d=$("d").value,g=$("g").value.trim();
+ if(!t||!x){say("Заполните заголовок и текст.");return}
+ var list=[];
+ var c=$("cur").value.trim();
+ if(c){try{list=JSON.parse(c);if(!Array.isArray(list))throw 0}catch(e){say("Текущие заметки вставлены неверно. Скопируйте файл целиком.");return}}
+ var n={id:"n"+Date.now().toString(36),date:d,title:t,tag:g,text:x};
+ if(!g)delete n.tag;
+ list.unshift(n);
+ $("out").value=JSON.stringify(list,null,2);
+ say("Готово. Нажмите «Скопировать».");
+});
+$("cp").addEventListener("click",function(){
+ var o=$("out");
+ if(!o.value){say("Сначала нажмите «Подготовить».");return}
+ o.select();
+ try{navigator.clipboard.writeText(o.value).then(function(){say("Скопировано.")},function(){document.execCommand("copy");say("Скопировано.")})}catch(e){document.execCommand("copy");say("Скопировано.")}
+});
+})();
+</script>
+</body>
+</html>
